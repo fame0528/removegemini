@@ -34,16 +34,31 @@ RemoveGemini.com is a cutting-edge web application that removes Gemini AI waterm
 
 ---
 
-## 📸 Screenshots
+## 📸 Live Examples
 
-![Hero Section](docs/1.webp)
-*Premium glassmorphism design with gradient effects*
+### Example 1: Neon Cityscape
+<table>
+<tr>
+<td width="50%"><img src="docs/examples/example-1-before.png" alt="Before - With Gemini Watermark" width="100%" /><br/><b>Before</b> - With Gemini watermark</td>
+<td width="50%"><img src="docs/examples/example-1-after.png" alt="After - Watermark Removed" width="100%" /><br/><b>After</b> - Watermark removed cleanly</td>
+</tr>
+</table>
 
-![Before/After Comparison](docs/2.webp)
-*Side-by-side image comparison with overlay labels*
+### Example 2: Hacker Portrait
+<table>
+<tr>
+<td width="50%"><img src="docs/examples/example-2-before.png" alt="Before - With Gemini Watermark" width="100%" /><br/><b>Before</b> - With Gemini watermark</td>
+<td width="50%"><img src="docs/examples/example-2-after.png" alt="After - Watermark Removed" width="100%" /><br/><b>After</b> - Complex watermark removed</td>
+</tr>
+</table>
 
-![Batch Processing](docs/3.webp)
-*Handle multiple images with thumbnail navigation*
+### Example 3: Tech Product Shot
+<table>
+<tr>
+<td width="50%"><img src="docs/examples/example-3-before.png" alt="Before - With Gemini Watermark" width="100%" /><br/><b>Before</b> - With Gemini watermark</td>
+<td width="50%"><img src="docs/examples/example-3-after.png" alt="After - Watermark Removed" width="100%" /><br/><b>After</b> - Artifact-free result</td>
+</tr>
+</table>
 
 ---
 

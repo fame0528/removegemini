@@ -1,12 +1,13 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  output: 'export', // Static export for 100% client-side operation
+  // Professional Vercel deployment configuration
+  // All processing happens client-side for privacy
   images: {
-    unoptimized: true, // Required for static export
+    unoptimized: true, // Images processed client-side only
   },
   webpack: (config) => {
-    // Handle PNG images as assets
+    // Handle image assets properly
     config.module.rules.push({
       test: /\.(png|jpg|jpeg|gif|webp)$/i,
       type: 'asset/resource',

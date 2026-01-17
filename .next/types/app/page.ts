@@ -1,4 +1,4 @@
-// File: C:\dev\gemini-watermark-remover-main\src\app\page.tsx
+// File: C:\dev\removegemini\src\app\page.tsx
 import * as entry from '../../../src/app/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

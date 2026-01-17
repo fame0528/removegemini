@@ -1,12 +1,15 @@
 [English](README.md)
 
-# Gemini 无损去水印工具 - [banana.ovo.re](https://banana.ovo.re)
+# RemoveGemini.com - AI水印一键去除工具
 
-基于 Javascript 的纯浏览器端 Gemini AI 图像无损去水印工具，使用数学精确的反向 Alpha 混合算法
+> **免费、隐私优先的AI水印去除工具**  
+> 采用AAA设计标准的Next.js高级应用
 
-<p align="center">
-  <img src="https://count.getloli.com/@gemini-watermark-remover?name=gemini-watermark-remover&theme=minecraft&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" width="400">
-</p>
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
+
+---
 
 ## 特性
 
@@ -17,26 +20,31 @@
 - ✅ **易于使用** - 拖拽选择图片，一键处理
 - ✅ **跨平台** - 支持所有现代浏览器
 
-## 效果示例
+## 📸 效果示例
 
-<details open>
-<summary>点击查看/收起示例</summary>
-　
-<p>无损 diff 示例</p>
-<p><img src="docs/lossless_diff.webp"></p>
+### 示例1：霓虹城市景观
+<table>
+<tr>
+<td width="50%"><img src="docs/examples/example-1-before.png" alt="处理前 - 带Gemini水印" width="100%" /><br/><b>处理前</b> - 带Gemini水印</td>
+<td width="50%"><img src="docs/examples/example-1-after.png" alt="处理后 - 水印已移除" width="100%" /><br/><b>处理后</b> - 水印完全移除</td>
+</tr>
+</table>
 
+### 示例2：黑客肖像
+<table>
+<tr>
+<td width="50%"><img src="docs/examples/example-2-before.png" alt="处理前 - 带Gemini水印" width="100%" /><br/><b>处理前</b> - 带Gemini水印</td>
+<td width="50%"><img src="docs/examples/example-2-after.png" alt="处理后 - 水印已移除" width="100%" /><br/><b>处理后</b> - 复杂水印移除</td>
+</tr>
+</table>
 
-<p>示例图片</p>
-
-| 原图 | 去水印后 |
-| :---: | :----: |
-| <img src="docs/1.webp" width="400"> | <img src="docs/unwatermarked_1.webp" width="400"> |
-| <img src="docs/2.webp" width="400"> | <img src="docs/unwatermarked_2.webp" width="400"> |
-| <img src="docs/3.webp" width="400"> | <img src="docs/unwatermarked_3.webp" width="400"> |
-| <img src="docs/4.webp" width="400"> | <img src="docs/unwatermarked_4.webp" width="400"> |
-| <img src="docs/5.webp" width="400"> | <img src="docs/unwatermarked_5.webp" width="400"> |
-
-</details>
+### 示例3：科技产品展示
+<table>
+<tr>
+<td width="50%"><img src="docs/examples/example-3-before.png" alt="处理前 - 带Gemini水印" width="100%" /><br/><b>处理前</b> - 带Gemini水印</td>
+<td width="50%"><img src="docs/examples/example-3-after.png" alt="处理后 - 水印已移除" width="100%" /><br/><b>处理后</b> - 无痕迹结果</td>
+</tr>
+</table>
 
 ## ⚠️ 使用需注意
 
