@@ -75,6 +75,29 @@ export interface OriginalCheckResult {
 }
 
 /**
+ * Batch processing state
+ */
+export type BatchState = 'idle' | 'processing' | 'paused' | 'complete' | 'cancelled';
+
+/**
+ * Batch processing progress information
+ */
+export interface BatchProgress {
+  /** Total number of images */
+  total: number;
+  /** Number of processed images */
+  processed: number;
+  /** Number of successful images */
+  success: number;
+  /** Number of failed images */
+  failed: number;
+  /** Number of pending images */
+  pending: number;
+  /** Current processing percentage (0-100) */
+  percentage: number;
+}
+
+/**
  * Image queue item for batch processing
  */
 export interface ImageQueueItem {

@@ -74,6 +74,12 @@ body {
   100% { background-position: 1000px 0; }
 }
 
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite;
+}
+
 .animate-float {
   animation: float 6s ease-in-out infinite;
 }

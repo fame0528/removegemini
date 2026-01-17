@@ -10,6 +10,7 @@ import { Header } from './Header';
 import { Footer } from './Footer';
 import { UploadArea } from './UploadArea';
 import { ImagePreview } from './ImagePreview';
+import { BatchProgressBar } from './BatchProgressBar';
 import { useWatermarkEngine } from '@/lib/hooks/useWatermarkEngine';
 import { i18n } from '@/lib/i18n';
 
@@ -18,8 +19,12 @@ export default function WatermarkRemover() {
     isLoading,
     imageQueue,
     currentIndex,
+    batchState,
+    batchProgress,
     processFiles,
     removeWatermark,
+    processBatch,
+    cancelBatch,
     downloadImage,
     downloadAll,
     reset,
@@ -211,6 +216,15 @@ export default function WatermarkRemover() {
           <UploadArea onFilesSelected={handleFilesSelected} disabled={isLoading} />
         ) : (
           <div>
+            {/* Batch Progress Bar */}
+            {imageQueue.length > 1 && (
+              <BatchProgressBar
+                state={batchState}
+                progress={batchProgress}
+                onCancel={cancelBatch}
+              />
+            )}
+
             {/* Image Thumbnails */}
             {imageQueue.length > 1 && (
               <div className="mb-4 flex items-center space-x-3 overflow-x-auto pb-3">
@@ -233,8 +247,46 @@ export default function WatermarkRemover() {
                       alt={`Thumbnail ${index + 1}`}
                       className="w-full h-full object-cover"
                     />
-                    {item.processedUrl && (
-                      <div className="absolute top-1 right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white" />
+                    {/* Status Badge */}
+                    {item.status === 'processing' && (
+                      <div className="absolute inset-0 bg-blue-500/30 flex items-center justify-center">
+                        <svg
+                          className="animate-spin h-6 w-6 text-white"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
+                        </svg>
+                      </div>
+                    )}
+                    {item.status === 'success' && (
+                      <div className="absolute top-1 right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
+                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                    )}
+                    {item.status === 'failed' && (
+                      <div className="absolute top-1 right-1 w-5 h-5 bg-red-500 rounded-full border-2 border-white flex items-center justify-center">
+                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                    )}
+                    {item.status === 'pending' && (
+                      <div className="absolute top-1 right-1 w-5 h-5 bg-yellow-500 rounded-full border-2 border-white" />
                     )}
                   </button>
                 ))}
@@ -258,6 +310,23 @@ export default function WatermarkRemover() {
               >
                 {i18n.t('btn.reset')}
               </button>
+              
+              {/* Remove All Button - shown if there are pending images */}
+              {batchProgress.pending > 0 && batchState !== 'processing' && (
+                <button
+                  onClick={processBatch}
+                  disabled={batchState === 'processing'}
+                  className="group relative px-8 py-4 bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 hover:from-green-500 hover:via-emerald-500 hover:to-teal-500 text-white font-bold rounded-xl transition-all duration-300 shadow-2xl shadow-green-500/50 hover:shadow-green-500/75 hover:scale-105 btn-shine disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <span className="flex items-center space-x-2">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>{i18n.t('btn.removeAll')}</span>
+                  </span>
+                </button>
+              )}
+              
               {hasProcessedImages && (
                 <button
                   onClick={handleDownloadAll}

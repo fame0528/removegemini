@@ -7,7 +7,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import type { ImageQueueItem, WatermarkInfo } from '@/types';
+import type { ImageQueueItem, WatermarkInfo, BatchState, BatchProgress } from '@/types';
 import { WatermarkEngine } from '@/lib/core/watermarkEngine';
 import { loadImage, checkOriginal, downloadCanvas, getExtensionFromMimeType } from '@/lib/utils/imageUtils';
 
@@ -23,10 +23,18 @@ interface UseWatermarkEngineReturn {
   imageQueue: ImageQueueItem[];
   /** Currently selected image index */
   currentIndex: number;
+  /** Batch processing state */
+  batchState: BatchState;
+  /** Batch processing progress */
+  batchProgress: BatchProgress;
   /** Process uploaded files */
   processFiles: (files: FileList | File[]) => Promise<void>;
   /** Remove watermark from specific image */
   removeWatermark: (index: number) => Promise<void>;
+  /** Process all pending images in batch */
+  processBatch: () => Promise<void>;
+  /** Cancel ongoing batch operation */
+  cancelBatch: () => void;
   /** Download processed image */
   downloadImage: (index: number) => void;
   /** Download all processed images */
@@ -88,9 +96,21 @@ export function useWatermarkEngine(): UseWatermarkEngineReturn {
   const [isLoading, setIsLoading] = useState(true);
   const [imageQueue, setImageQueue] = useState<ImageQueueItem[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [batchState, setBatchState] = useState<BatchState>('idle');
+  const [batchProgress, setBatchProgress] = useState<BatchProgress>({
+    total: 0,
+    processed: 0,
+    success: 0,
+    failed: 0,
+    pending: 0,
+    percentage: 0,
+  });
   
   // Store canvas references to prevent garbage collection
   const canvasRefs = useRef<Map<number, HTMLCanvasElement>>(new Map());
+  
+  // Flag to cancel batch processing
+  const cancelBatchRef = useRef(false);
 
   /**
    * Initialize watermark engine
@@ -112,9 +132,35 @@ export function useWatermarkEngine(): UseWatermarkEngineReturn {
   }, []);
 
   /**
+   * Update batch progress based on current queue state
+   */
+  const updateBatchProgress = useCallback(() => {
+    setImageQueue((currentQueue) => {
+      const total = currentQueue.length;
+      const success = currentQueue.filter((item) => item.status === 'success').length;
+      const failed = currentQueue.filter((item) => item.status === 'failed').length;
+      const processing = currentQueue.filter((item) => item.status === 'processing').length;
+      const pending = currentQueue.filter((item) => item.status === 'pending').length;
+      const processed = success + failed;
+      const percentage = total > 0 ? Math.round((processed / total) * 100) : 0;
+
+      setBatchProgress({
+        total,
+        processed,
+        success,
+        failed,
+        pending,
+        percentage,
+      });
+
+      return currentQueue;
+    });
+  }, []);
+
+  /**
    * Process uploaded files
    * 
-   * Loads images, checks if they're original, and adds them to the queue.
+   * Loads images, checks if they're original, and adds them to the queue WITHOUT auto-processing.
    */
   const processFiles = useCallback(async (files: FileList | File[]): Promise<void> => {
     if (!engine) return;
@@ -162,22 +208,17 @@ export function useWatermarkEngine(): UseWatermarkEngineReturn {
         });
       }
 
-      // Add items to queue
-      const startIndex = imageQueue.length;
+      // Add items to queue (no auto-processing)
       setImageQueue((prev) => [...prev, ...newItems]);
-
-      // Automatically process each image after adding to queue
-      for (let i = 0; i < newItems.length; i++) {
-        const index = startIndex + i;
-        // Process each image sequentially
-        await processImageAtIndex(index, newItems[i]);
-      }
+      
+      // Update progress
+      setTimeout(updateBatchProgress, 0);
     } catch (error) {
       console.error('Error processing files:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [engine, imageQueue.length]);
+  }, [engine, updateBatchProgress]);
 
   /**
    * Internal function to process a specific image
@@ -280,9 +321,56 @@ export function useWatermarkEngine(): UseWatermarkEngineReturn {
   }, [imageQueue, downloadImage]);
 
   /**
+   * Process all pending images in batch
+   */
+  const processBatch = useCallback(async (): Promise<void> => {
+    if (!engine || batchState === 'processing') return;
+
+    // Reset cancel flag
+    cancelBatchRef.current = false;
+    setBatchState('processing');
+
+    try {
+      const pendingItems = imageQueue
+        .map((item, index) => ({ item, index }))
+        .filter(({ item }) => item.status === 'pending' || item.status === 'failed');
+
+      for (const { item, index } of pendingItems) {
+        // Check if batch was cancelled
+        if (cancelBatchRef.current) {
+          setBatchState('cancelled');
+          break;
+        }
+
+        await processImageAtIndex(index, item);
+        updateBatchProgress();
+      }
+
+      // Update final state
+      if (!cancelBatchRef.current) {
+        setBatchState('complete');
+      }
+    } catch (error) {
+      console.error('Batch processing error:', error);
+      setBatchState('idle');
+    }
+  }, [engine, batchState, imageQueue, processImageAtIndex, updateBatchProgress]);
+
+  /**
+   * Cancel ongoing batch operation
+   */
+  const cancelBatch = useCallback((): void => {
+    cancelBatchRef.current = true;
+    setBatchState('cancelled');
+  }, []);
+
+  /**
    * Reset and clear all images
    */
   const reset = useCallback((): void => {
+    // Cancel any ongoing batch
+    cancelBatchRef.current = true;
+    
     // Revoke object URLs to prevent memory leaks
     imageQueue.forEach((item) => {
       if (item.originalUrl) {
@@ -298,6 +386,15 @@ export function useWatermarkEngine(): UseWatermarkEngineReturn {
 
     setImageQueue([]);
     setCurrentIndex(0);
+    setBatchState('idle');
+    setBatchProgress({
+      total: 0,
+      processed: 0,
+      success: 0,
+      failed: 0,
+      pending: 0,
+      percentage: 0,
+    });
   }, [imageQueue]);
 
   return {
@@ -305,8 +402,12 @@ export function useWatermarkEngine(): UseWatermarkEngineReturn {
     isLoading,
     imageQueue,
     currentIndex,
+    batchState,
+    batchProgress,
     processFiles,
     removeWatermark,
+    processBatch,
+    cancelBatch,
     downloadImage,
     downloadAll,
     reset,
