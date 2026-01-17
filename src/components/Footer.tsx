@@ -56,7 +56,7 @@ export function Footer() {
               </li>
               <li>
                 <a
-                  href="/terms.html"
+                  href="/terms"
                   className="text-sm text-blue-400 hover:text-blue-300 hover:underline"
                 >
                   {i18n.t('footer.terms')}

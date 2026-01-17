@@ -37,7 +37,7 @@
   "footer.terms": "Terms of Use",
   "footer.github": "GitHub",
   "footer.tech": "Technology",
-  "footer.copyright": "© {{year}} Gemini Watermark Remover. All rights reserved.",
+  "footer.copyright": "© {{year}} RemoveGemini.com. All rights reserved.",
   "loading.text": "Processing...",
   "status.loading": "Loading resources...",
   "status.pending": "Pending...",
