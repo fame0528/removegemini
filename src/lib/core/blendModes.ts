@@ -7,10 +7,10 @@
 import type { WatermarkPosition } from '@/types';
 
 /** Threshold to ignore very small alpha values (noise) */
-const ALPHA_THRESHOLD = 0.002;
+const ALPHA_THRESHOLD = 0.001;
 
 /** Maximum alpha value to avoid division by near-zero */
-const MAX_ALPHA = 0.99;
+const MAX_ALPHA = 0.98;
 
 /** Color value for white watermark logo */
 const LOGO_VALUE = 255;

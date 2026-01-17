@@ -38,8 +38,8 @@ export function calculateAlphaMap(bgCaptureImageData: ImageData): Float32Array {
     // This represents the watermark's opacity at this pixel
     const maxChannel = Math.max(r, g, b);
 
-    // Normalize to [0.0, 1.0] range
-    alphaMap[i] = maxChannel / 255.0;
+    // Normalize to [0.0, 1.0] range with slight boost for better removal
+    alphaMap[i] = Math.min(1.0, (maxChannel / 255.0) * 1.05);
   }
 
   return alphaMap;
