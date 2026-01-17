@@ -25,6 +25,10 @@ const BG_96_URL = '/bg_96.png';
  * - If both width AND height > 1024px → use 96×96 watermark
  * - Otherwise → use 48×48 watermark
  * 
+ * Edge cases:
+ * - Very small images (< 200px) may not have watermarks
+ * - Watermark position may vary based on aspect ratio
+ * 
  * @param imageWidth - Image width in pixels
  * @param imageHeight - Image height in pixels
  * @returns Watermark configuration object
@@ -39,19 +43,30 @@ export function detectWatermarkConfig(
   imageWidth: number,
   imageHeight: number
 ): WatermarkConfig {
+  // For very large images, use 96×96 watermark
   if (imageWidth > 1024 && imageHeight > 1024) {
     return {
       logoSize: 96,
       marginRight: 64,
       marginBottom: 64,
     };
-  } else {
+  }
+  
+  // For medium/large images with one dimension > 1024
+  if (imageWidth > 1024 || imageHeight > 1024) {
     return {
       logoSize: 48,
       marginRight: 32,
       marginBottom: 32,
     };
   }
+  
+  // For smaller images, use smaller watermark with tighter margins
+  return {
+    logoSize: 48,
+    marginRight: 24,
+    marginBottom: 24,
+  };
 }
 
 /**
@@ -220,11 +235,27 @@ export class WatermarkEngine {
     const config = detectWatermarkConfig(canvas.width, canvas.height);
     const position = calculateWatermarkPosition(canvas.width, canvas.height, config);
 
+    // Debug logging
+    console.log('🔍 Watermark Detection:', {
+      imageSize: `${canvas.width}×${canvas.height}`,
+      watermarkSize: `${config.logoSize}×${config.logoSize}`,
+      position: `(${position.x}, ${position.y})`,
+      margins: `right: ${config.marginRight}px, bottom: ${config.marginBottom}px`,
+    });
+
     // Get alpha map for this watermark size
     const alphaMap = await this.getAlphaMap(config.logoSize);
 
     // Remove watermark from image data
     removeWatermark(imageData, alphaMap, position);
+
+    // Debug: Draw detection box (optional - can be enabled for debugging)
+    if (typeof window !== 'undefined' && (window as any).__DEBUG_WATERMARK__) {
+      ctx.strokeStyle = '#ff0000';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(position.x, position.y, position.width, position.height);
+      console.log('🎯 Debug box drawn at watermark position');
+    }
 
     // Write processed image data back to canvas
     ctx.putImageData(imageData, 0, 0);
