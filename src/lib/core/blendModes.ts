@@ -7,10 +7,10 @@
 import type { WatermarkPosition } from '@/types';
 
 /** Threshold to ignore very small alpha values (noise) */
-const ALPHA_THRESHOLD = 0.001;
+const ALPHA_THRESHOLD = 0.01;
 
 /** Maximum alpha value to avoid division by near-zero */
-const MAX_ALPHA = 0.98;
+const MAX_ALPHA = 0.95;
 
 /** Color value for white watermark logo */
 const LOGO_VALUE = 255;
@@ -90,6 +90,7 @@ export function removeWatermark(
         const watermarked = imageData.data[imgIdx + c];
 
         // Reverse alpha blending formula
+        // original = (watermarked - alpha * logo) / (1 - alpha)
         const original = (watermarked - alpha * LOGO_VALUE) / oneMinusAlpha;
 
         // Clip to [0, 255] range and round

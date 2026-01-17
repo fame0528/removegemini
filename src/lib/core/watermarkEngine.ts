@@ -323,35 +323,16 @@ export class WatermarkEngine {
       provider: config.provider,
     });
 
-    // Extract watermark region to analyze actual alpha
-    const watermarkRegion = ctx.getImageData(position.x, position.y, position.width, position.height);
-    
-    // Calculate alpha map directly from the watermark region
-    // by analyzing the brightness (watermark is lighter than background)
-    const directAlphaMap = new Float32Array(position.width * position.height);
-    for (let i = 0; i < directAlphaMap.length; i++) {
-      const idx = i * 4;
-      const r = watermarkRegion.data[idx];
-      const g = watermarkRegion.data[idx + 1];
-      const b = watermarkRegion.data[idx + 2];
-      
-      // Calculate brightness
-      const brightness = (r + g + b) / 3;
-      
-      // Watermark makes pixels brighter - estimate alpha from brightness increase
-      // Assuming background is darker (typical for this image)
-      const estimatedAlpha = Math.min(1.0, brightness / 255.0 * 0.3); // Conservative estimate
-      directAlphaMap[i] = estimatedAlpha;
-    }
-
-    console.log('🤖 Using direct watermark alpha detection...');
-    removeWatermark(imageData, directAlphaMap, position);
+    // Use background capture method with proper alpha map
+    console.log('🤖 Using Gemini watermark removal with bg capture...');
+    const alphaMap = await this.getAlphaMap(config.logoSize);
+    removeWatermark(imageData, alphaMap, position);
     ctx.putImageData(imageData, 0, 0);
 
-    // Debug: Draw detection box (always enabled for now to diagnose positioning)
+    // Debug: Draw detection box (keep enabled per user request)
     if (typeof window !== 'undefined') {
-      ctx.strokeStyle = '#ff0000';
-      ctx.lineWidth = 3;
+      ctx.strokeStyle = '#00ff00'; // Green for visibility
+      ctx.lineWidth = 2;
       ctx.strokeRect(position.x, position.y, position.width, position.height);
       console.log('🎯 Debug box drawn at watermark position');
     }
