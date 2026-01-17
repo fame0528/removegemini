@@ -1,221 +1,373 @@
-[中文文档](README_zh.md)
+# 🎨 RemoveGemini.com
 
-# Gemini Lossless Watermark Remover - [banana.ovo.re](https://banana.ovo.re)
+> **Free, Privacy-First AI Watermark Removal Tool**  
+> Premium Next.js application with AAA design standards
 
-A high-performance, 100% client-side tool for removing Gemini AI watermarks. Built with pure JavaScript, it leverages a mathematically precise **Reverse Alpha Blending** algorithm rather than unpredictable AI inpainting.
-
-<p align="center">
-  <img src="https://count.getloli.com/@gemini-watermark-remover?name=gemini-watermark-remover&theme=minecraft&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" width="400">
-</p>
-
-## Features
-
-- ✅ **100% Client-side** - No backend, no server-side processing. Your data stays in your browser.
-- ✅ **Privacy-First** - Images are never uploaded to any server. Period.
-- ✅ **Mathematical Precision** - Based on the Reverse Alpha Blending formula, not "hallucinating" AI models.
-- ✅ **Auto-Detection** - Intelligent recognition of 48×48 or 96×96 watermark variants.
-- ✅ **User Friendly** - Simple drag-and-drop interface with instant processing.
-- ✅ **Cross-Platform** - Runs smoothly on all modern web browsers.
-
-## Examples
-
-<details open>
-<summary>Click to Expand/Collapse Examples</summary>
-　
-<p>lossless diff example</p>
-<p><img src="docs/lossless_diff.webp"></p>
-
-
-<p>example images</p>
-
-| Original Image | Watermark Removed |
-| :---: | :----: |
-| <img src="docs/1.webp" width="400"> | <img src="docs/unwatermarked_1.webp" width="400"> |
-| <img src="docs/2.webp" width="400"> | <img src="docs/unwatermarked_2.webp" width="400"> |
-| <img src="docs/3.webp" width="400"> | <img src="docs/unwatermarked_3.webp" width="400"> |
-| <img src="docs/4.webp" width="400"> | <img src="docs/unwatermarked_4.webp" width="400"> |
-| <img src="docs/5.webp" width="400"> | <img src="docs/unwatermarked_5.webp" width="400"> |
-
-</details>
-
-## ⚠️ Disclaimer
-
-> [!WARNING]
->  **USE AT YOUR OWN RISK**
->
-> This tool modifies image files. While it is designed to work reliably, unexpected results may occur due to:
-> - Variations in Gemini's watermark implementation
-> - Corrupted or unusual image formats
-> - Edge cases not covered by testing
->
-> The author assumes no responsibility for any data loss, image corruption, or unintended modifications. By using this tool, you acknowledge that you understand these risks.
-
-> [!NOTE]
-> **Note**: Disabling any fingerprint defender extensions (e.g., Canvas Fingerprint Defender) to avoid processing errors. https://github.com/journey-ad/gemini-watermark-remover/issues/3
-
-## Usage
-
-### Online Website
-
-1. Open [banana.ovo.re](https://banana.ovo.re).
-2. Drag and drop or click to select your Gemini-generated image.
-3. The engine will automatically process and remove the watermark.
-4. Download the cleaned image.
-
-### Userscript for Gemini Conversation Pages
-
-1. Install a userscript manager (e.g., Tampermonkey or Greasemonkey).
-2. Open [gemini-watermark-remover.user.js](https://banana.ovo.re/userscript/gemini-watermark-remover.user.js).
-3. The script will install automatically.
-4. Navigate to Gemini conversation pages.
-5. Click "Copy Image" or "Download Image" to remove the watermark.
-
-## Development
-
-```bash
-# Install dependencies
-pnpm install
-
-# Development build
-pnpm dev
-
-# Production build
-pnpm build
-
-# Local preview
-pnpm serve
-```
-
-## How it Works
-
-### The Gemini Watermarking Process
-
-Gemini applies watermarks using standard alpha compositing:
-
-$$watermarked = \alpha \cdot logo + (1 - \alpha) \cdot original$$
-
-Where:
-- `watermarked`: The pixel value with the watermark.
-- `α`: The Alpha channel value (0.0 - 1.0).
-- `logo`: The watermark logo color value (White = 255).
-- `original`: The raw, original pixel value we want to recover.
-
-### The Reverse Solution
-
-To remove the watermark, we solve for `original`:
-
-$$original = \frac{watermarked - \alpha \cdot logo}{1 - \alpha}$$
-
-By capturing the watermark on a known solid background, we reconstruct the exact Alpha map and apply the inverse formula to restore the original pixels with zero loss.
-
-## Detection Rules
-
-| Image Dimension Condition | Watermark Size | Right Margin | Bottom Margin |
-| :--- | :--- | :--- | :--- |
-| Width > 1024 **AND** Height > 1024 | 96×96 | 64px | 64px |
-| Otherwise | 48×48 | 32px | 32px |
-
-## Project Structure
-
-```text
-gemini-watermark-remover/
-├── public/
-│   ├── index.html         # Main page
-│   └── terms.html         # Terms of Service page
-├── src/
-│   ├── core/
-│   │   ├── alphaMap.js    # Alpha map calculation logic
-│   │   ├── blendModes.js  # Implementation of Reverse Alpha Blending
-│   │   └── watermarkEngine.js  # Main engine coordinator
-│   ├── assets/
-│   │   ├── bg_48.png      # Pre-captured 48×48 watermark map
-│   │   └── bg_96.png      # Pre-captured 96×96 watermark map
-│   ├── i18n/              # Internationalization language files
-│   ├── userscript/        # Userscript for Gemini
-│   ├── app.js             # Website application entry point
-│   └── i18n.js            # Internationalization utilities
-├── dist/                  # Build output directory
-├── build.js               # Build script
-└── package.json
-```
-
-## Core Modules
-
-### alphaMap.js
-
-Calculates the Alpha channel by comparing captured watermark assets:
-
-```javascript
-export function calculateAlphaMap(bgCaptureImageData) {
-    // Extract max RGB channel and normalize to [0, 1]
-    const alphaMap = new Float32Array(width * height);
-    for (let i = 0; i < alphaMap.length; i++) {
-        const maxChannel = Math.max(r, g, b);
-        alphaMap[i] = maxChannel / 255.0;
-    }
-    return alphaMap;
-}
-```
-
-### blendModes.js
-
-The mathematical core of the tool:
-
-```javascript
-export function removeWatermark(imageData, alphaMap, position) {
-    // Formula: original = (watermarked - α × 255) / (1 - α)
-    for (let row = 0; row < height; row++) {
-        for (let col = 0; col < width; col++) {
-            const alpha = Math.min(alphaMap[idx], MAX_ALPHA);
-            const original = (watermarked - alpha * 255) / (1.0 - alpha);
-            imageData.data[idx] = Math.max(0, Math.min(255, original));
-        }
-    }
-}
-```
-
-## Browser Compatibility
-
-- ✅ Chrome 90+
-- ✅ Firefox 88+
-- ✅ Safari 14+
-- ✅ Edge 90+
-
-Required APIs:
-- ES6 Modules
-- Canvas API
-- Async/Await
-- TypedArray (Float32Array, Uint8ClampedArray)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38bdf8)](https://tailwindcss.com/)
 
 ---
 
-## Limitations
+## 🌟 Overview
 
-- Only removes **Gemini visible watermarks** <small>(the semi-transparent logo in bottom-right)</small>
-- Does not remove invisible/steganographic watermarks. <small>[(Learn more about SynthID)](https://support.google.com/gemini/answer/16722517)</small>
-- Designed for Gemini's current watermark pattern <small>(as of 2025)</small>
+RemoveGemini.com is a cutting-edge web application that removes Gemini AI watermarks from images using advanced reverse alpha blending algorithms. Built with modern web technologies and designed with a focus on privacy, performance, and user experience.
 
-## Legal Disclaimer
+### ✨ Key Features
 
-This tool is provided for **personal and educational use only**. 
+- **🔒 100% Privacy-First** - All processing happens in your browser. Zero uploads, zero tracking
+- **⚡ Lightning Fast** - Millisecond processing with Web Workers and optimized algorithms
+- **💎 AAA Design** - Premium glassmorphism UI with smooth animations
+- **🎯 Auto-Processing** - Instant watermark removal on upload
+- **📱 Fully Responsive** - Perfect experience on desktop, tablet, and mobile
+- **🌐 Multi-Language** - English and Chinese support with i18n
+- **🖼️ Batch Processing** - Handle multiple images simultaneously
+- **🔍 Zoom Preview** - Click to zoom images for detailed inspection
+- **📥 Easy Export** - Download individual images or batch download all
 
-The removal of watermarks may have legal implications depending on your jurisdiction and the intended use of the images. Users are solely responsible for ensuring their use of this tool complies with applicable laws, terms of service, and intellectual property rights.
+---
 
-The author does not condone or encourage the misuse of this tool for copyright infringement, misrepresentation, or any other unlawful purposes.
+## 🚀 Live Demo
 
-**THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING FROM THE USE OF THIS SOFTWARE.**
+**Production:** [https://removegemini.com](https://removegemini.com)
 
-## Credits
+---
 
-This project is a JavaScript port of the [Gemini Watermark Tool](https://github.com/allenk/GeminiWatermarkTool) by Allen Kuo ([@allenk](https://github.com/allenk)).
+## 📸 Screenshots
 
-The Reverse Alpha Blending method and calibrated watermark masks are based on the original work © 2024 AllenK (Kwyshell), licensed under MIT License.
+![Hero Section](docs/1.webp)
+*Premium glassmorphism design with gradient effects*
 
-## Related Links
+![Before/After Comparison](docs/2.webp)
+*Side-by-side image comparison with overlay labels*
 
-- [Gemini Watermark Tool](https://github.com/allenk/GeminiWatermarkTool)
-- [Removing Gemini AI Watermarks: A Deep Dive into Reverse Alpha Blending](https://allenkuo.medium.com/removing-gemini-ai-watermarks-a-deep-dive-into-reverse-alpha-blending-bbbd83af2a3f)
+![Batch Processing](docs/3.webp)
+*Handle multiple images with thumbnail navigation*
 
-## License
+---
 
-[MIT License](./LICENSE)
+## 🛠️ Tech Stack
+
+### Frontend Framework
+- **Next.js 15** - React framework with App Router
+- **TypeScript 5.0** - Type-safe development
+- **Tailwind CSS 3.4** - Utility-first styling
+
+### Image Processing
+- **Canvas API** - Low-level pixel manipulation
+- **Web Workers** - Non-blocking background processing
+- **Reverse Alpha Blending** - Advanced watermark removal algorithm
+
+### UI/UX
+- **Glassmorphism** - Modern backdrop-blur effects
+- **Medium-zoom** - Smooth image zoom interactions
+- **CSS Animations** - Hardware-accelerated transforms
+- **Gradient System** - Blue → Purple → Pink color palette
+
+### Development
+- **SWR** - Data fetching and state management
+- **ESLint** - Code quality enforcement
+- **Turbopack** - Lightning-fast bundler
+- **PNPM** - Efficient package management
+
+---
+
+## 📦 Installation
+
+### Prerequisites
+- Node.js 18+ or Bun
+- PNPM (recommended) or NPM
+
+### Clone & Install
+
+```bash
+# Clone the repository
+git clone https://github.com/fame0528/removegemini.git
+cd removegemini
+
+# Install dependencies
+pnpm install
+```
+
+### Development Server
+
+```bash
+# Start dev server (http://localhost:3000)
+pnpm dev
+
+# With Turbopack
+pnpm dev --turbo
+```
+
+### Build for Production
+
+```bash
+# Create optimized build
+pnpm build
+
+# Preview production build
+pnpm start
+
+# Export static files
+pnpm build && pnpm export
+```
+
+---
+
+## 📂 Project Structure
+
+```
+removegemini/
+├── src/
+│   ├── app/                    # Next.js App Router
+│   │   ├── globals.css        # Global styles & animations
+│   │   ├── layout.tsx         # Root layout with metadata
+│   │   └── page.tsx           # Home page
+│   ├── components/            # React components
+│   │   ├── Header.tsx         # Navigation with logo & language switcher
+│   │   ├── Footer.tsx         # Links and branding
+│   │   ├── WatermarkRemover.tsx   # Main app orchestration
+│   │   ├── UploadArea.tsx     # Drag & drop file upload
+│   │   └── ImagePreview.tsx   # Side-by-side comparison
+│   ├── lib/                   # Core logic
+│   │   ├── core/              # Watermark removal engine
+│   │   │   ├── watermarkEngine.ts  # Main algorithm
+│   │   │   ├── alphaMap.ts         # Alpha channel detection
+│   │   │   └── blendModes.ts       # Blend mode calculations
+│   │   ├── hooks/             # React hooks
+│   │   │   └── useWatermarkEngine.ts  # State management
+│   │   ├── utils/             # Helper functions
+│   │   │   └── imageUtils.ts       # Image processing utilities
+│   │   └── i18n.ts            # Internationalization
+│   └── types/                 # TypeScript definitions
+│       ├── index.ts           # Exported types
+│       └── images.d.ts        # Image-related types
+├── public/                    # Static assets
+│   ├── bg_48.png              # Watermark patterns (48x48)
+│   ├── bg_96.png              # Watermark patterns (96x96)
+│   └── terms.html             # Terms of use page
+├── dev/                       # ECHO Development Tracking
+│   ├── planned.md             # Upcoming features
+│   ├── progress.md            # Active development
+│   ├── completed.md           # Finished features
+│   ├── roadmap.md             # Strategic direction
+│   ├── architecture.md        # Technical decisions
+│   └── QUICK_START.md         # Current project state
+└── docs/                      # Documentation & screenshots
+```
+
+---
+
+## 🎯 How It Works
+
+### Watermark Removal Algorithm
+
+RemoveGemini.com uses a sophisticated **reverse alpha blending** algorithm:
+
+1. **Detection Phase**
+   - Scan image for watermark patterns (48x48 or 96x96)
+   - Identify alpha channel values
+   - Map watermark position and coverage
+
+2. **Analysis Phase**
+   - Calculate inverse blend modes
+   - Determine optimal reconstruction parameters
+   - Build alpha restoration map
+
+3. **Processing Phase**
+   - Apply reverse blending per pixel
+   - Reconstruct original RGB values
+   - Remove watermark artifacts
+
+4. **Optimization Phase**
+   - Smooth boundaries
+   - Color correction
+   - Final quality enhancement
+
+### Key Components
+
+**WatermarkEngine** (`src/lib/core/watermarkEngine.ts`)
+- Core algorithm implementation
+- Canvas-based pixel manipulation
+- Web Worker support for performance
+
+**useWatermarkEngine** (`src/lib/hooks/useWatermarkEngine.ts`)
+- React state management
+- Auto-processing pipeline
+- Queue management for batch operations
+
+**ImagePreview** (`src/components/ImagePreview.tsx`)
+- Side-by-side comparison
+- Medium-zoom integration
+- Compact metadata display
+
+---
+
+## 🎨 Design System
+
+### Color Palette
+
+```css
+/* Primary Gradients */
+--gradient-blue: #3b82f6 → #8b5cf6 → #ec4899
+--background: #0a0a0f (radial gradient overlays)
+
+/* Glassmorphism */
+--glass: backdrop-blur(20px) + rgba(255,255,255,0.05)
+--glass-light: backdrop-blur(16px) + rgba(255,255,255,0.1)
+```
+
+### Animation System
+
+```css
+/* Keyframes */
+@keyframes float { /* 6s smooth vertical movement */ }
+@keyframes glow { /* 3s opacity pulse */ }
+@keyframes shimmer { /* Button shine effect */ }
+@keyframes spin-slow { /* 3s rotation */ }
+
+/* Utility Classes */
+.card-hover { translateY(-8px) + scale(1.02) }
+.btn-shine { pseudo-element shimmer on hover }
+```
+
+### Typography
+
+- **Headers**: Gradient text with background-clip
+- **Sizes**: 5xl-7xl for heroes, 2xl for features
+- **Body**: Gray-300/400 with leading-relaxed
+
+---
+
+## 🔧 Development
+
+### Code Quality Standards
+
+- ✅ TypeScript strict mode enabled
+- ✅ ESLint with Next.js rules
+- ✅ Component-based architecture
+- ✅ Comprehensive JSDoc comments
+- ✅ Single Responsibility Principle
+- ✅ DRY (Don't Repeat Yourself)
+- ✅ Utility-first design patterns
+
+### Adding Features
+
+Follow ECHO development methodology:
+
+1. Create FID (Feature ID) in `dev/planned.md`
+2. Plan implementation with acceptance criteria
+3. Move to `dev/progress.md` when starting
+4. Implement with AAA quality standards
+5. Test thoroughly (manual + TypeScript verification)
+6. Move to `dev/completed.md` with metrics
+7. Update `dev/QUICK_START.md`
+
+### Testing
+
+```bash
+# Type checking
+pnpm typecheck
+
+# Lint code
+pnpm lint
+
+# Build verification
+pnpm build
+```
+
+---
+
+## 📋 Roadmap
+
+See `dev/roadmap.md` for detailed plans.
+
+### Q1 2026
+- [ ] Service Worker for offline support
+- [ ] PWA (Progressive Web App) capabilities
+- [ ] Enhanced batch processing with progress bars
+- [ ] Custom watermark pattern support
+
+### Q2 2026
+- [ ] API for third-party integration
+- [ ] Browser extension (Chrome, Firefox)
+- [ ] Advanced editing tools (crop, resize, filters)
+- [ ] Comparison slider for before/after
+
+### Q3 2026
+- [ ] AI-powered watermark detection
+- [ ] Cloud sync (optional, privacy-preserving)
+- [ ] Team collaboration features
+- [ ] Analytics dashboard
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Please follow these guidelines:
+
+1. **Fork** the repository
+2. **Create** a feature branch (`git checkout -b feature/AmazingFeature`)
+3. **Follow** ECHO development standards
+4. **Write** comprehensive commit messages
+5. **Test** thoroughly before submitting
+6. **Submit** a Pull Request
+
+### Code Standards
+
+- Use TypeScript strict mode
+- Follow existing component patterns
+- Add JSDoc comments for functions
+- Update relevant documentation
+- Maintain AAA quality standards
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+**Copyright © 2026 RemoveGemini.com**
+
+---
+
+## ⚠️ Disclaimer
+
+This tool is provided for **educational and personal use only**. 
+
+- ✅ Use for learning image processing algorithms
+- ✅ Use for personal photo editing
+- ❌ Do not use for copyright infringement
+- ❌ Do not use for commercial purposes without proper rights
+
+**Note:** While this tool removes visible watermarks, it does not affect invisible steganographic watermarks (like [Google's SynthID](https://support.google.com/gemini/answer/16722517)).
+
+---
+
+## 🙏 Acknowledgments
+
+- **Next.js Team** - For the amazing React framework
+- **Vercel** - For excellent deployment platform
+- **Open Source Community** - For invaluable tools and libraries
+- **Contributors** - For helping improve this project
+
+---
+
+## 📧 Contact & Support
+
+- **Website**: [https://removegemini.com](https://removegemini.com)
+- **GitHub**: [https://github.com/fame0528/removegemini](https://github.com/fame0528/removegemini)
+- **Issues**: [Report bugs or request features](https://github.com/fame0528/removegemini/issues)
+
+---
+
+<div align="center">
+
+**Made with ❤️ by RemoveGemini.com**
+
+⭐ Star us on GitHub if you find this useful!
+
+[Website](https://removegemini.com) • [Documentation](docs/) • [Report Bug](https://github.com/fame0528/removegemini/issues) • [Request Feature](https://github.com/fame0528/removegemini/issues)
+
+</div>
