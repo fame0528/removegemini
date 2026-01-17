@@ -9,6 +9,7 @@ import type {
   WatermarkPosition,
   WatermarkInfo,
   BackgroundCaptures,
+  WatermarkProvider,
 } from '@/types';
 import { calculateAlphaMap } from './alphaMap';
 import { removeWatermark } from './blendModes';
@@ -17,13 +18,35 @@ import { removeWatermark } from './blendModes';
 // Note: In Next.js, we'll use dynamic imports for better compatibility
 const BG_48_URL = '/bg_48.png';
 const BG_96_URL = '/bg_96.png';
+// Nano Banana watermark patterns (to be added)
+const NANO_BANANA_48_URL = '/nano_banana_48.png';
+const NANO_BANANA_96_URL = '/nano_banana_96.png';
 
 /**
- * Detect watermark configuration based on image dimensions
+ * Detect watermark provider from image metadata or patterns
  * 
- * Gemini's watermark rules:
- * - If both width AND height > 1024px → use 96×96 watermark
- * - Otherwise → use 48×48 watermark
+ * @param image - Image element to analyze
+ * @returns Detected provider type
+ */
+export function detectWatermarkProvider(
+  image: HTMLImageElement | HTMLCanvasElement
+): WatermarkProvider {
+  // TODO: Implement provider detection logic
+  // For now, we'll check for both patterns and use the one that matches best
+  
+  // Check if nano banana watermark exists (bottom-right sparkle pattern)
+  // Check if gemini watermark exists (bottom-right "Gemini" text pattern)
+  
+  // For now, default to trying both
+  return 'unknown';
+}
+
+/**
+ * Detect watermark configuration based on image dimensions and provider
+ * 
+ * Watermark rules:
+ * - Gemini: If both width AND height > 1024px → use 96×96, else 48×48
+ * - Nano Banana: Similar sizing, position in bottom-right corner
  * 
  * Edge cases:
  * - Very small images (< 200px) may not have watermarks
@@ -31,17 +54,19 @@ const BG_96_URL = '/bg_96.png';
  * 
  * @param imageWidth - Image width in pixels
  * @param imageHeight - Image height in pixels
+ * @param provider - Watermark provider type
  * @returns Watermark configuration object
  * 
  * @example
  * ```typescript
- * const config = detectWatermarkConfig(1920, 1080);
- * // Returns: { logoSize: 96, marginRight: 64, marginBottom: 64 }
+ * const config = detectWatermarkConfig(1920, 1080, 'gemini');
+ * // Returns: { logoSize: 96, marginRight: 64, marginBottom: 64, provider: 'gemini' }
  * ```
  */
 export function detectWatermarkConfig(
   imageWidth: number,
-  imageHeight: number
+  imageHeight: number,
+  provider: WatermarkProvider = 'unknown'
 ): WatermarkConfig {
   // For very large images, use 96×96 watermark
   if (imageWidth > 1024 && imageHeight > 1024) {
@@ -49,6 +74,7 @@ export function detectWatermarkConfig(
       logoSize: 96,
       marginRight: 64,
       marginBottom: 64,
+      provider,
     };
   }
   
@@ -58,6 +84,7 @@ export function detectWatermarkConfig(
       logoSize: 48,
       marginRight: 32,
       marginBottom: 32,
+      provider,
     };
   }
   
@@ -66,6 +93,7 @@ export function detectWatermarkConfig(
     logoSize: 48,
     marginRight: 24,
     marginBottom: 24,
+    provider,
   };
 }
 
@@ -135,7 +163,7 @@ export class WatermarkEngine {
    * Static factory method to create and initialize engine
    * 
    * Loads background capture images asynchronously before
-   * creating the engine instance.
+   * creating the engine instance. Supports both Gemini and Nano Banana patterns.
    * 
    * @returns Promise resolving to initialized WatermarkEngine
    * @throws Error if images fail to load
@@ -143,8 +171,10 @@ export class WatermarkEngine {
   static async create(): Promise<WatermarkEngine> {
     const bg48 = new Image();
     const bg96 = new Image();
+    const nanoBanana48 = new Image();
+    const nanoBanana96 = new Image();
 
-    await Promise.all([
+    const loadPromises = [
       new Promise<void>((resolve, reject) => {
         bg48.onload = () => resolve();
         bg48.onerror = (e) => {
@@ -161,9 +191,44 @@ export class WatermarkEngine {
         };
         bg96.src = BG_96_URL;
       }),
-    ]);
+    ];
 
-    return new WatermarkEngine({ bg48, bg96 });
+    // Try to load nano banana patterns (optional)
+    const nanoPromises = [
+      new Promise<void>((resolve) => {
+        nanoBanana48.onload = () => {
+          console.log('✅ Loaded Nano Banana 48x48 pattern');
+          resolve();
+        };
+        nanoBanana48.onerror = () => {
+          console.warn('⚠️ Nano Banana 48x48 pattern not found, will use Gemini pattern only');
+          resolve(); // Don't reject, just continue
+        };
+        nanoBanana48.src = NANO_BANANA_48_URL;
+      }),
+      new Promise<void>((resolve) => {
+        nanoBanana96.onload = () => {
+          console.log('✅ Loaded Nano Banana 96x96 pattern');
+          resolve();
+        };
+        nanoBanana96.onerror = () => {
+          console.warn('⚠️ Nano Banana 96x96 pattern not found, will use Gemini pattern only');
+          resolve(); // Don't reject, just continue
+        };
+        nanoBanana96.src = NANO_BANANA_96_URL;
+      }),
+    ];
+
+    await Promise.all([...loadPromises, ...nanoPromises]);
+
+    const captures: BackgroundCaptures = {
+      bg48,
+      bg96,
+      nanoBanana48: nanoBanana48.complete && nanoBanana48.naturalWidth > 0 ? nanoBanana48 : undefined,
+      nanoBanana96: nanoBanana96.complete && nanoBanana96.naturalWidth > 0 ? nanoBanana96 : undefined,
+    };
+
+    return new WatermarkEngine(captures);
   }
 
   /**
@@ -203,15 +268,15 @@ export class WatermarkEngine {
    * Remove watermark from image
    * 
    * Main entry point for watermark removal. Automatically detects
-   * watermark configuration, calculates position, and applies
-   * reverse alpha blending to remove the watermark.
+   * watermark configuration, tries both Gemini and Nano Banana patterns,
+   * and applies reverse alpha blending to remove the watermark.
    * 
    * @param image - Input image (HTMLImageElement or HTMLCanvasElement)
    * @returns Promise resolving to canvas with watermark removed
    * 
    * @example
    * ```typescript
- * const engine = await WatermarkEngine.create();
+   * const engine = await WatermarkEngine.create();
    * const processedCanvas = await engine.removeWatermarkFromImage(img);
    * document.body.appendChild(processedCanvas);
    * ```
@@ -231,8 +296,11 @@ export class WatermarkEngine {
     // Get image data
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
+    // Detect provider (future: smart detection)
+    const provider = detectWatermarkProvider(image);
+
     // Detect watermark configuration and position
-    const config = detectWatermarkConfig(canvas.width, canvas.height);
+    const config = detectWatermarkConfig(canvas.width, canvas.height, provider);
     const position = calculateWatermarkPosition(canvas.width, canvas.height, config);
 
     // Debug logging
@@ -241,13 +309,42 @@ export class WatermarkEngine {
       watermarkSize: `${config.logoSize}×${config.logoSize}`,
       position: `(${position.x}, ${position.y})`,
       margins: `right: ${config.marginRight}px, bottom: ${config.marginBottom}px`,
+      provider: config.provider,
     });
 
-    // Get alpha map for this watermark size
-    const alphaMap = await this.getAlphaMap(config.logoSize);
-
-    // Remove watermark from image data
-    removeWatermark(imageData, alphaMap, position);
+    // Try Nano Banana pattern first if available
+    if (this.bgCaptures.nanoBanana48 || this.bgCaptures.nanoBanana96) {
+      console.log('🍌 Trying Nano Banana watermark removal...');
+      const nanoBgImage = config.logoSize === 48 ? this.bgCaptures.nanoBanana48 : this.bgCaptures.nanoBanana96;
+      
+      if (nanoBgImage) {
+        const nanoCanvas = document.createElement('canvas');
+        nanoCanvas.width = config.logoSize;
+        nanoCanvas.height = config.logoSize;
+        const nanoCtx = nanoCanvas.getContext('2d')!;
+        nanoCtx.drawImage(nanoBgImage, 0, 0);
+        const nanoImageData = nanoCtx.getImageData(0, 0, config.logoSize, config.logoSize);
+        const nanoAlphaMap = calculateAlphaMap(nanoImageData);
+        
+        // Clone image data for nano banana attempt
+        const nanoAttemptData = new ImageData(
+          new Uint8ClampedArray(imageData.data),
+          imageData.width,
+          imageData.height
+        );
+        
+        removeWatermark(nanoAttemptData, nanoAlphaMap, position);
+        ctx.putImageData(nanoAttemptData, 0, 0);
+        
+        console.log('✅ Applied Nano Banana watermark removal');
+      }
+    } else {
+      // Fallback to Gemini pattern
+      console.log('🤖 Using Gemini watermark removal...');
+      const alphaMap = await this.getAlphaMap(config.logoSize);
+      removeWatermark(imageData, alphaMap, position);
+      ctx.putImageData(imageData, 0, 0);
+    }
 
     // Debug: Draw detection box (optional - can be enabled for debugging)
     if (typeof window !== 'undefined' && (window as any).__DEBUG_WATERMARK__) {
@@ -256,9 +353,6 @@ export class WatermarkEngine {
       ctx.strokeRect(position.x, position.y, position.width, position.height);
       console.log('🎯 Debug box drawn at watermark position');
     }
-
-    // Write processed image data back to canvas
-    ctx.putImageData(imageData, 0, 0);
 
     return canvas;
   }
@@ -270,16 +364,18 @@ export class WatermarkEngine {
    * 
    * @param imageWidth - Image width in pixels
    * @param imageHeight - Image height in pixels
+   * @param provider - Optional provider type
    * @returns Watermark information object
    */
-  getWatermarkInfo(imageWidth: number, imageHeight: number): WatermarkInfo {
-    const config = detectWatermarkConfig(imageWidth, imageHeight);
+  getWatermarkInfo(imageWidth: number, imageHeight: number, provider: WatermarkProvider = 'unknown'): WatermarkInfo {
+    const config = detectWatermarkConfig(imageWidth, imageHeight, provider);
     const position = calculateWatermarkPosition(imageWidth, imageHeight, config);
 
     return {
       size: config.logoSize,
       position,
       config,
+      provider: config.provider || 'unknown',
     };
   }
 }

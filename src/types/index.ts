@@ -4,6 +4,11 @@
  */
 
 /**
+ * Supported watermark provider types
+ */
+export type WatermarkProvider = 'gemini' | 'nano-banana' | 'unknown';
+
+/**
  * Watermark configuration based on image dimensions
  */
 export interface WatermarkConfig {
@@ -13,6 +18,8 @@ export interface WatermarkConfig {
   marginRight: number;
   /** Bottom margin in pixels */
   marginBottom: number;
+  /** Provider type */
+  provider?: WatermarkProvider;
 }
 
 /**
@@ -39,16 +46,22 @@ export interface WatermarkInfo {
   position: WatermarkPosition;
   /** Configuration used */
   config: WatermarkConfig;
+  /** Detected provider */
+  provider: WatermarkProvider;
 }
 
 /**
  * Background capture images for alpha map calculation
  */
 export interface BackgroundCaptures {
-  /** 48x48 background capture */
+  /** 48x48 background capture (Gemini) */
   bg48: HTMLImageElement;
-  /** 96x96 background capture */
+  /** 96x96 background capture (Gemini) */
   bg96: HTMLImageElement;
+  /** 48x48 nano banana background */
+  nanoBanana48?: HTMLImageElement;
+  /** 96x96 nano banana background */
+  nanoBanana96?: HTMLImageElement;
 }
 
 /**
