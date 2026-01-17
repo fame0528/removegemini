@@ -78,8 +78,9 @@ export function detectWatermarkConfig(
     };
   }
   
-  // For medium/large images with one dimension > 1024
-  if (imageWidth > 1024 || imageHeight > 1024) {
+  // For medium/large images with one dimension >= 1024
+  // NOTE: Gemini uses 32px margins for images at or above 1024px
+  if (imageWidth >= 1024 || imageHeight >= 1024) {
     return {
       logoSize: 48,
       marginRight: 32,
