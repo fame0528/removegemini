@@ -69,6 +69,7 @@ export function detectWatermarkConfig(
   provider: WatermarkProvider = 'unknown'
 ): WatermarkConfig {
   // For very large images, use 96×96 watermark
+  // Both dimensions must be > 1024
   if (imageWidth > 1024 && imageHeight > 1024) {
     return {
       logoSize: 96,
@@ -78,22 +79,16 @@ export function detectWatermarkConfig(
     };
   }
   
-  // For medium/large images with one dimension >= 1024
-  // NOTE: Gemini uses 32px margins for images at or above 1024px
-  if (imageWidth >= 1024 || imageHeight >= 1024) {
-    return {
-      logoSize: 48,
-      marginRight: 32,
-      marginBottom: 32,
-      provider,
-    };
-  }
+  // For all other cases, use 48×48 watermark
+  // Gemini appears to use different margins based on image size:
+  // - For images >= 1024px in either dimension: 32px margins
+  // - For smaller images: 24px margins
+  const useWiderMargin = imageWidth >= 1024 || imageHeight >= 1024;
   
-  // For smaller images, use smaller watermark with tighter margins
   return {
     logoSize: 48,
-    marginRight: 24,
-    marginBottom: 24,
+    marginRight: useWiderMargin ? 32 : 24,
+    marginBottom: useWiderMargin ? 32 : 24,
     provider,
   };
 }
