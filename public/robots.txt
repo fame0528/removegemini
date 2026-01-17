@@ -1,0 +1,6 @@
+# RemoveGemini.com Robots.txt
+User-agent: *
+Allow: /
+
+# Sitemaps
+Sitemap: https://removegemini.com/sitemap.xml
