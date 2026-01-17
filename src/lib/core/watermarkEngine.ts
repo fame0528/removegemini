@@ -323,10 +323,29 @@ export class WatermarkEngine {
       provider: config.provider,
     });
 
-    // Always use Gemini pattern (default behavior)
-    console.log('🤖 Using Gemini watermark removal...');
-    const alphaMap = await this.getAlphaMap(config.logoSize);
-    removeWatermark(imageData, alphaMap, position);
+    // Extract watermark region to analyze actual alpha
+    const watermarkRegion = ctx.getImageData(position.x, position.y, position.width, position.height);
+    
+    // Calculate alpha map directly from the watermark region
+    // by analyzing the brightness (watermark is lighter than background)
+    const directAlphaMap = new Float32Array(position.width * position.height);
+    for (let i = 0; i < directAlphaMap.length; i++) {
+      const idx = i * 4;
+      const r = watermarkRegion.data[idx];
+      const g = watermarkRegion.data[idx + 1];
+      const b = watermarkRegion.data[idx + 2];
+      
+      // Calculate brightness
+      const brightness = (r + g + b) / 3;
+      
+      // Watermark makes pixels brighter - estimate alpha from brightness increase
+      // Assuming background is darker (typical for this image)
+      const estimatedAlpha = Math.min(1.0, brightness / 255.0 * 0.3); // Conservative estimate
+      directAlphaMap[i] = estimatedAlpha;
+    }
+
+    console.log('🤖 Using direct watermark alpha detection...');
+    removeWatermark(imageData, directAlphaMap, position);
     ctx.putImageData(imageData, 0, 0);
 
     // Debug: Draw detection box (always enabled for now to diagnose positioning)
