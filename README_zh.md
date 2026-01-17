@@ -1,6 +1,10 @@
 [English](README.md)
 
-# RemoveGemini.com - AI水印一键去除工具
+<div align="center">
+
+<img src="docs/branding/logo-full.png" alt="RemoveGemini.com Logo" width="400" />
+
+# RemoveGemini.com
 
 > **免费、隐私优先的AI水印去除工具**  
 > 采用AAA设计标准的Next.js高级应用
@@ -8,6 +12,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
+
+</div>
 
 ---
 

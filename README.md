@@ -1,12 +1,17 @@
-# 🎨 RemoveGemini.com
-
-> **Free, Privacy-First AI Watermark Removal Tool**  
-> Premium Next.js application with AAA design standards
+<div align="center">
+  <img src="docs/branding/logo-full.png" alt="RemoveGemini Logo" width="400" />
+  
+  <h1>RemoveGemini.com</h1>
+  
+  <p><strong>Free, Privacy-First AI Watermark Removal Tool</strong></p>
+  <p>Premium Next.js application with AAA design standards</p>
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38bdf8)](https://tailwindcss.com/)
+
+</div>
 
 ---
 
