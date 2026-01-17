@@ -7,10 +7,10 @@
 import type { WatermarkPosition } from '@/types';
 
 /** Threshold to ignore very small alpha values (noise) */
-const ALPHA_THRESHOLD = 0.01;
+const ALPHA_THRESHOLD = 0.002;
 
 /** Maximum alpha value to avoid division by near-zero */
-const MAX_ALPHA = 0.95;
+const MAX_ALPHA = 0.99;
 
 /** Color value for white watermark logo */
 const LOGO_VALUE = 255;
@@ -64,39 +64,6 @@ export function removeWatermark(
 ): void {
   const { x, y, width, height } = position;
 
-  // Instead of reverse alpha blending, use content-aware fill
-  // Sample colors from the border of the watermark region
-  const borderSamples: number[][] = [];
-  
-  // Sample from left edge (if available)
-  if (x > 0) {
-    for (let row = 0; row < height; row++) {
-      const idx = ((y + row) * imageData.width + (x - 1)) * 4;
-      borderSamples.push([imageData.data[idx], imageData.data[idx + 1], imageData.data[idx + 2]]);
-    }
-  }
-  
-  // Sample from top edge (if available)
-  if (y > 0) {
-    for (let col = 0; col < width; col++) {
-      const idx = ((y - 1) * imageData.width + (x + col)) * 4;
-      borderSamples.push([imageData.data[idx], imageData.data[idx + 1], imageData.data[idx + 2]]);
-    }
-  }
-
-  // Calculate average border color
-  let avgR = 0, avgG = 0, avgB = 0;
-  for (const sample of borderSamples) {
-    avgR += sample[0];
-    avgG += sample[1];
-    avgB += sample[2];
-  }
-  if (borderSamples.length > 0) {
-    avgR /= borderSamples.length;
-    avgG /= borderSamples.length;
-    avgB /= borderSamples.length;
-  }
-
   // Process each pixel in the watermark region
   for (let row = 0; row < height; row++) {
     for (let col = 0; col < width; col++) {
@@ -114,18 +81,19 @@ export function removeWatermark(
         continue;
       }
 
-      // For pixels with watermark, blend with border average
-      // The stronger the watermark alpha, the more we use the border color
-      const blendFactor = Math.min(alpha, MAX_ALPHA);
-      
+      // Limit alpha value to avoid division by near-zero
+      alpha = Math.min(alpha, MAX_ALPHA);
+      const oneMinusAlpha = 1.0 - alpha;
+
+      // Apply reverse alpha blending to each RGB channel
       for (let c = 0; c < 3; c++) {
-        const current = imageData.data[imgIdx + c];
-        const avgColor = c === 0 ? avgR : c === 1 ? avgG : avgB;
-        
-        // Blend current pixel with average border color
-        const reconstructed = current * (1 - blendFactor) + avgColor * blendFactor;
-        
-        imageData.data[imgIdx + c] = Math.max(0, Math.min(255, Math.round(reconstructed)));
+        const watermarked = imageData.data[imgIdx + c];
+
+        // Reverse alpha blending formula
+        const original = (watermarked - alpha * LOGO_VALUE) / oneMinusAlpha;
+
+        // Clip to [0, 255] range and round
+        imageData.data[imgIdx + c] = Math.max(0, Math.min(255, Math.round(original)));
       }
 
       // Alpha channel remains unchanged

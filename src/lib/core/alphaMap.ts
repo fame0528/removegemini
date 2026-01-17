@@ -39,8 +39,7 @@ export function calculateAlphaMap(bgCaptureImageData: ImageData): Float32Array {
     const maxChannel = Math.max(r, g, b);
 
     // Normalize to [0.0, 1.0] range
-    // Boost alpha slightly for more aggressive removal
-    alphaMap[i] = Math.min(1.0, (maxChannel / 255.0) * 1.15);
+    alphaMap[i] = maxChannel / 255.0;
   }
 
   return alphaMap;
