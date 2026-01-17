@@ -106,7 +106,7 @@ export function ImagePreview({ item, onRemoveWatermark, onDownload }: ImagePrevi
   return (
     <div className="space-y-4">
       {/* Image Comparison - Main Focus */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Original */}
         <div className="group glass rounded-xl overflow-hidden card-hover">
           <div className="relative">
@@ -114,7 +114,7 @@ export function ImagePreview({ item, onRemoveWatermark, onDownload }: ImagePrevi
               ref={originalImgRef}
               src={item.originalUrl || ''}
               alt="Original"
-              className="w-full h-auto cursor-zoom-in"
+              className="w-full h-auto max-h-[70vh] object-contain cursor-zoom-in"
             />
             {/* Compact overlay label */}
             <div className="absolute top-3 left-3 px-2.5 py-1 rounded-lg glass-light">
@@ -125,14 +125,14 @@ export function ImagePreview({ item, onRemoveWatermark, onDownload }: ImagePrevi
 
         {/* Processed */}
         <div className="group glass rounded-xl overflow-hidden card-hover">
-          <div className="relative">
+          <div className="relative min-h-[200px]">
             {item.processedUrl ? (
               <>
                 <img
                   ref={processedImgRef}
                   src={item.processedUrl}
                   alt="Processed"
-                  className="w-full h-auto cursor-zoom-in"
+                  className="w-full h-auto max-h-[70vh] object-contain cursor-zoom-in"
                 />
                 {/* Compact overlay label with success indicator */}
                 <div className="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-gradient-to-r from-green-500/30 to-blue-500/30 backdrop-blur-md border border-green-500/50">
@@ -143,7 +143,7 @@ export function ImagePreview({ item, onRemoveWatermark, onDownload }: ImagePrevi
                 </div>
               </>
             ) : (
-              <div className="flex items-center justify-center min-h-[400px] bg-gradient-to-br from-gray-900/50 to-gray-800/50">
+              <div className="flex items-center justify-center min-h-[200px] sm:min-h-[300px] bg-gradient-to-br from-gray-900/50 to-gray-800/50">
                 <div className="text-center">
                   {item.status === 'processing' ? (
                     <>
