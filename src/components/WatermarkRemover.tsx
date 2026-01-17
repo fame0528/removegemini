@@ -311,8 +311,8 @@ export default function WatermarkRemover() {
                 {i18n.t('btn.reset')}
               </button>
               
-              {/* Remove All Button - shown if there are pending images */}
-              {batchProgress.pending > 0 && (
+              {/* Remove All Button - shown if there are pending or failed images */}
+              {(batchProgress.pending > 0 || batchProgress.failed > 0) && (
                 <button
                   onClick={processBatch}
                   disabled={batchState === 'processing'}

@@ -160,7 +160,7 @@ export function useWatermarkEngine(): UseWatermarkEngineReturn {
   /**
    * Process uploaded files
    * 
-   * Loads images, checks if they're original, and adds them to the queue WITHOUT auto-processing.
+   * Loads images, checks if they're original, and adds them to the queue WITH auto-processing.
    */
   const processFiles = useCallback(async (files: FileList | File[]): Promise<void> => {
     if (!engine) return;
@@ -208,17 +208,25 @@ export function useWatermarkEngine(): UseWatermarkEngineReturn {
         });
       }
 
-      // Add items to queue (no auto-processing)
+      // Add items to queue
+      const startIndex = imageQueue.length;
       setImageQueue((prev) => [...prev, ...newItems]);
       
       // Update progress
       setTimeout(updateBatchProgress, 0);
+
+      // Auto-process each image after adding to queue
+      for (let i = 0; i < newItems.length; i++) {
+        const index = startIndex + i;
+        await processImageAtIndex(index, newItems[i]);
+        updateBatchProgress();
+      }
     } catch (error) {
       console.error('Error processing files:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [engine, updateBatchProgress]);
+  }, [engine, imageQueue.length, updateBatchProgress]);
 
   /**
    * Internal function to process a specific image
