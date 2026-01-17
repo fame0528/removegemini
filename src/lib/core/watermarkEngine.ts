@@ -79,12 +79,12 @@ export function detectWatermarkConfig(
   }
   
   // For images at exactly 1024px width (common Gemini output)
-  // Gemini uses 16px margins for 1024px width images
+  // Gemini uses very tight margins for 1024px width images
   if (imageWidth === 1024) {
     return {
       logoSize: 48,
-      marginRight: 16,
-      marginBottom: 16,
+      marginRight: 8,
+      marginBottom: 8,
       provider,
     };
   }
@@ -329,10 +329,10 @@ export class WatermarkEngine {
     removeWatermark(imageData, alphaMap, position);
     ctx.putImageData(imageData, 0, 0);
 
-    // Debug: Draw detection box (optional - can be enabled for debugging)
-    if (typeof window !== 'undefined' && (window as any).__DEBUG_WATERMARK__) {
+    // Debug: Draw detection box (always enabled for now to diagnose positioning)
+    if (typeof window !== 'undefined') {
       ctx.strokeStyle = '#ff0000';
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 3;
       ctx.strokeRect(position.x, position.y, position.width, position.height);
       console.log('🎯 Debug box drawn at watermark position');
     }
