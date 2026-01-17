@@ -1,5 +1,5 @@
 {
-  "name": "gemini-watermark-remover",
+  "name": "removegemini",
   "description": "Automatically removes watermarks from Gemini AI generated images",
   "version": "2.0.0",
   "author": "journey-ad",

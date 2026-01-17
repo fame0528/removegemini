@@ -83,7 +83,7 @@ const userscriptCtx = await esbuild.context({
   ...commonConfig,
   entryPoints: ['src/userscript/index.js'],
   format: 'iife',
-  outfile: 'dist/userscript/gemini-watermark-remover.user.js',
+  outfile: 'dist/userscript/removegemini.user.js',
   banner: { js: userscriptBanner },
   minify: false
 });
