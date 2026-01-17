@@ -312,7 +312,7 @@ export default function WatermarkRemover() {
               </button>
               
               {/* Remove All Button - shown if there are pending images */}
-              {batchProgress.pending > 0 && batchState !== 'processing' && (
+              {batchProgress.pending > 0 && (
                 <button
                   onClick={processBatch}
                   disabled={batchState === 'processing'}
