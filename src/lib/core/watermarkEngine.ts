@@ -312,39 +312,11 @@ export class WatermarkEngine {
       provider: config.provider,
     });
 
-    // Try Nano Banana pattern first if available
-    if (this.bgCaptures.nanoBanana48 || this.bgCaptures.nanoBanana96) {
-      console.log('🍌 Trying Nano Banana watermark removal...');
-      const nanoBgImage = config.logoSize === 48 ? this.bgCaptures.nanoBanana48 : this.bgCaptures.nanoBanana96;
-      
-      if (nanoBgImage) {
-        const nanoCanvas = document.createElement('canvas');
-        nanoCanvas.width = config.logoSize;
-        nanoCanvas.height = config.logoSize;
-        const nanoCtx = nanoCanvas.getContext('2d')!;
-        nanoCtx.drawImage(nanoBgImage, 0, 0);
-        const nanoImageData = nanoCtx.getImageData(0, 0, config.logoSize, config.logoSize);
-        const nanoAlphaMap = calculateAlphaMap(nanoImageData);
-        
-        // Clone image data for nano banana attempt
-        const nanoAttemptData = new ImageData(
-          new Uint8ClampedArray(imageData.data),
-          imageData.width,
-          imageData.height
-        );
-        
-        removeWatermark(nanoAttemptData, nanoAlphaMap, position);
-        ctx.putImageData(nanoAttemptData, 0, 0);
-        
-        console.log('✅ Applied Nano Banana watermark removal');
-      }
-    } else {
-      // Fallback to Gemini pattern
-      console.log('🤖 Using Gemini watermark removal...');
-      const alphaMap = await this.getAlphaMap(config.logoSize);
-      removeWatermark(imageData, alphaMap, position);
-      ctx.putImageData(imageData, 0, 0);
-    }
+    // Always use Gemini pattern (default behavior)
+    console.log('🤖 Using Gemini watermark removal...');
+    const alphaMap = await this.getAlphaMap(config.logoSize);
+    removeWatermark(imageData, alphaMap, position);
+    ctx.putImageData(imageData, 0, 0);
 
     // Debug: Draw detection box (optional - can be enabled for debugging)
     if (typeof window !== 'undefined' && (window as any).__DEBUG_WATERMARK__) {
