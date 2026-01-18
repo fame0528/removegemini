@@ -11,6 +11,7 @@ import { Footer } from './Footer';
 import { UploadArea } from './UploadArea';
 import { ImagePreview } from './ImagePreview';
 import { BatchProgressBar } from './BatchProgressBar';
+import { AdUnit } from './AdUnit';
 import { useWatermarkEngine } from '@/lib/hooks/useWatermarkEngine';
 import { i18n } from '@/lib/i18n';
 
@@ -185,6 +186,18 @@ export default function WatermarkRemover() {
             </div>
           </div>
         </div>
+
+        {/* Ad Unit - Top Banner */}
+        {imageQueue.length === 0 && (
+          <div className="mb-8 flex justify-center">
+            <AdUnit 
+              slot="1234567890"
+              format="horizontal"
+              style={{ minHeight: '90px', maxWidth: '728px', width: '100%' }}
+              className="glass rounded-xl p-2"
+            />
+          </div>
+        )}
 
         {/* Main Content Area */}
         {isLoading && imageQueue.length === 0 ? (
