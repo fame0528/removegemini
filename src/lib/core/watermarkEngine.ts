@@ -348,14 +348,6 @@ export class WatermarkEngine {
     removeWatermark(imageData, alphaMap, position);
     ctx.putImageData(imageData, 0, 0);
 
-    // Debug: Draw detection box (always enabled for debugging)
-    if (typeof window !== 'undefined') {
-      ctx.strokeStyle = '#00ff00';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(position.x, position.y, position.width, position.height);
-      console.log('🎯 Debug box drawn at watermark position');
-    }
-
     return canvas;
   }
 
