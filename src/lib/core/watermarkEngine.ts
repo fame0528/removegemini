@@ -78,9 +78,9 @@ export function detectWatermarkConfig(
     };
   }
   
-  // For images at exactly 1024px width (common Gemini output)
-  // Gemini uses very tight margins for 1024px width images
-  if (imageWidth === 1024) {
+  // Special case: Landscape images at exactly 1024px width
+  // Gemini uses very tight margins (8px) for these
+  if (imageWidth === 1024 && imageHeight < imageWidth) {
     return {
       logoSize: 48,
       marginRight: 8,
@@ -89,7 +89,17 @@ export function detectWatermarkConfig(
     };
   }
   
-  // For other large images (>= 1024 in either dimension)
+  // For square images at 1024×1024, use 32px margins
+  if (imageWidth === 1024 && imageHeight === 1024) {
+    return {
+      logoSize: 48,
+      marginRight: 32,
+      marginBottom: 32,
+      provider,
+    };
+  }
+  
+  // For other large images with one dimension >= 1024
   if (imageWidth >= 1024 || imageHeight >= 1024) {
     return {
       logoSize: 48,
@@ -99,7 +109,7 @@ export function detectWatermarkConfig(
     };
   }
   
-  // For smaller images, use 48×48 with tighter margins
+  // For smaller images, use smaller watermark with tighter margins
   return {
     logoSize: 48,
     marginRight: 24,
@@ -264,6 +274,10 @@ export class WatermarkEngine {
     canvas.width = size;
     canvas.height = size;
     const ctx = canvas.getContext('2d')!;
+    
+    // CRITICAL: Disable image smoothing to preserve exact pixel values
+    ctx.imageSmoothingEnabled = false;
+    
     ctx.drawImage(bgImage, 0, 0);
 
     const imageData = ctx.getImageData(0, 0, size, size);
@@ -301,6 +315,11 @@ export class WatermarkEngine {
     canvas.height = image.height;
     const ctx = canvas.getContext('2d')!;
 
+    // CRITICAL: Disable image smoothing to preserve exact pixel values
+    // Image smoothing can cause pixel value interpolation which breaks
+    // the reverse alpha blending algorithm
+    ctx.imageSmoothingEnabled = false;
+
     // Draw original image
     ctx.drawImage(image, 0, 0);
 
@@ -323,15 +342,15 @@ export class WatermarkEngine {
       provider: config.provider,
     });
 
-    // Use background capture method with proper alpha map
-    console.log('🤖 Using Gemini watermark removal with bg capture...');
+    // Always use Gemini pattern (default behavior)
+    console.log('🤖 Using Gemini watermark removal...');
     const alphaMap = await this.getAlphaMap(config.logoSize);
     removeWatermark(imageData, alphaMap, position);
     ctx.putImageData(imageData, 0, 0);
 
-    // Debug: Draw detection box (keep enabled per user request)
+    // Debug: Draw detection box (always enabled for debugging)
     if (typeof window !== 'undefined') {
-      ctx.strokeStyle = '#00ff00'; // Green for visibility
+      ctx.strokeStyle = '#00ff00';
       ctx.lineWidth = 2;
       ctx.strokeRect(position.x, position.y, position.width, position.height);
       console.log('🎯 Debug box drawn at watermark position');

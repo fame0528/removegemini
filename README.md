@@ -210,6 +210,8 @@ RemoveGemini.com uses a sophisticated **reverse alpha blending** algorithm:
 **WatermarkEngine** (`src/lib/core/watermarkEngine.ts`)
 - Core algorithm implementation
 - Canvas-based pixel manipulation
+- Image smoothing disabled for pixel-perfect processing
+- Debug visualization (green box) for troubleshooting
 - Web Worker support for performance
 
 **useWatermarkEngine** (`src/lib/hooks/useWatermarkEngine.ts`)
@@ -221,6 +223,16 @@ RemoveGemini.com uses a sophisticated **reverse alpha blending** algorithm:
 - Side-by-side comparison
 - Medium-zoom integration
 - Compact metadata display
+
+### Algorithm Details
+
+**Critical Implementation Notes:**
+```typescript
+// Disable image smoothing to preserve exact pixel values
+ctx.imageSmoothingEnabled = false;
+```
+
+The watermark removal algorithm requires **exact pixel-perfect matching**. Canvas image smoothing (browser interpolation) is disabled to ensure RGB values remain unchanged during processing. This is critical for the reverse alpha blending formula to work correctly.
 
 ---
 

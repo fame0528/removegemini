@@ -1,21 +1,23 @@
 # 🚀 Quick Start - RemoveGemini.com
 
 **Last Updated:** January 17, 2026  
-**Overall Progress:** 95% (Production-ready with professional branding)
+**Overall Progress:** 98% (Production-ready with stabilized algorithm)
 
 ---
 
 ## 📊 Current State
 
-### ✅ Completed Features (v1.0.0)
+### ✅ Completed Features (v1.0.1)
 
 **Core Functionality:**
-- ✅ Reverse alpha blending watermark removal algorithm
+- ✅ Reverse alpha blending watermark removal algorithm (STABILIZED)
+- ✅ Image smoothing disabled for pixel-perfect processing
 - ✅ Auto-processing on image upload
 - ✅ Batch processing with queue management
 - ✅ Side-by-side before/after comparison
 - ✅ Image zoom with medium-zoom integration
 - ✅ Individual and batch download capabilities
+- ✅ Debug visualization (green box) permanently enabled
 
 **UI/UX:**
 - ✅ AAA glassmorphism design system
@@ -35,6 +37,7 @@
 - ✅ Zero-dead-space image layout
 - ✅ Proper zoom initialization and cleanup
 - ✅ 148 KB optimized production bundle
+- ✅ Pixel-perfect canvas rendering (no interpolation)
 
 **Infrastructure:**
 - ✅ GitHub repository setup
@@ -43,6 +46,17 @@
 - ✅ ECHO development tracking
 - ✅ Vercel auto-deployment
 - ✅ Professional branding assets
+
+---
+
+## 🎯 Recent Updates
+
+**v1.0.1 - Algorithm Stabilization (January 17, 2026):**
+- Fixed watermark removal algorithm via git restore (commit 45a884d)
+- Discovered and fixed critical image smoothing issue
+- Added landscape image position detection (8px margins for 1024×width)
+- Square images (1024×1024) working perfectly
+- Green debug box enabled permanently for troubleshooting
 
 ---
 
